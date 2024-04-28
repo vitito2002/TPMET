@@ -1,5 +1,6 @@
 # IMPORTANTE: Para importar estas clases en otro archivo (que se encuentre en la misma carpeta), escribir:
 # from matricesRalas import MatrizRala, GaussJordan 
+import numpy as np
 
 class ListaEnlazada:
     def __init__( self ):
@@ -149,11 +150,55 @@ class MatrizRala:
 
         return res
 
-def GaussJordan( A, b ):
-    # Hallar solucion x para el sistema Ax = b
-    # Devolver error si el sistema no tiene solucion o tiene infinitas soluciones, con el mensaje apropiado
-    pass
 
+def GaussJordan(A, B):
+    """
+    Función que resuelve un sistema de ecuaciones lineales Ax = B utilizando el algoritmo de Gauss-Jordan.
+    """
+    # Concatenar A y B horizontalmente para formar una única matriz extendida
+    extended_matrix = np.hstack((A.astype(float), B.astype(float)))
+
+    # Iniciar el proceso de reducción de Gauss-Jordan
+    pivot_col = 0
+    n_rows, n_cols = extended_matrix.shape
+    for row in range(n_rows):
+        if pivot_col >= n_cols - 1:
+            return extended_matrix[:, -1].reshape(-1, 1)  # Devolver la solución x
+
+        row_pivot = row
+        while abs(extended_matrix[row_pivot][pivot_col]) < 1e-5:
+            row_pivot += 1
+            if row_pivot == n_rows:
+                row_pivot = row
+                pivot_col += 1
+                if n_cols - 1 == pivot_col:
+                    return extended_matrix[:, -1].reshape(-1, 1)  # Devolver la solución x
+            else:
+                extended_matrix[[row_pivot, row]] = extended_matrix[[row, row_pivot]]
+
+        pivot = extended_matrix[row][pivot_col]
+        extended_matrix[row] = [mrx / float(pivot) for mrx in extended_matrix[row]]
+
+        for other_row in range(n_rows):
+            if other_row != row:
+                below_pivot = extended_matrix[other_row][pivot_col]
+                extended_matrix[other_row] = [iv - below_pivot * rv for rv, iv in zip(extended_matrix[row], extended_matrix[other_row])]
+        pivot_col += 1
+
+    return extended_matrix[:, -1].reshape(-1, 1)  # Devolver la solución x
+
+# Ejemplo de uso
+A = np.array([[2, -1,6],
+              [2, -1,6],
+              [2, -1,6]])
+
+B = np.array([[0],
+              [0],
+              [0]])
+
+solution = GaussJordan(A, B)
+print("La solución del sistema es:")
+print(solution)
 
 
 

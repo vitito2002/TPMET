@@ -106,28 +106,55 @@ class MatrizRala:
 
     def __getitem__( self, Idx ):
         # Esta funcion implementa la indexacion ( Idx es una tupla (m,n) ) -> A[m,n]
-        fila, columna = Idx
-        if fila not in self.filas or columna not in self.filas[fila]:
-            return 0
-        else:
-            return self.filas[fila][columna]
-        pass
+        m, n = Idx
+        if m in self.filas:
+            fila = self.filas[m]
+            nodo_curr = fila.raiz
+            while nodo_curr:
+                columna, valor = nodo_curr.valor
+                if columna == valor:
+                    return valor
+                nodo_curr = nodo_curr.siguiente
+        return 0
+
     
     def __setitem__( self, Idx, v ):
         # Esta funcion implementa la asignacion durante indexacion ( Idx es una tupla (m,n) ) -> A[m,n] = v
-        fila, columna = Idx
-        if fila not in self.filas:
-            self.filas[fila] = {}
-        self.filas[fila][columna] = v
-        pass
+        m, n = Idx
+        if m not in self.filas:
+            fila_extra = ListaEnlazada()
+            fila_extra.insertarFrente((n,v))
+            self.filas[m] = fila_extra
+        else:
+            fila = self.filas[m]
+            nodo_curr = fila.raiz
+            nodo_previo = None
+            while nodo_curr:
+                columna = nodo_curr.valor[0]
+                if columna==n:
+                    nodo_curr.valor = (n,v)
+                    return
+                elif columna > n:
+                    if not nodo_previo:
+                        fila.insertarFrente((n,v))
+                    else:
+                        fila.insertarDespuesDeNodo((n,v),nodo_previo)
+                    return
+                nodo_previo = nodo_curr
+                nodo_curr = nodo_curr.siguiente
+            fila.push((n,v))
+            
 
     def __mul__( self, k ):
         # Esta funcion implementa el producto matriz-escalar -> A * k
         result = MatrizRala(*self.shape)
-        for fila in self.filas:
-            result.filas[fila] = {columna: self.filas[fila][columna] * k for columna in self.filas[fila]}
+        for fila,lista in self.filas.items():
+            nodo_curr = lista.raiz
+            while nodo_curr:
+                columna, valor = nodo_curr.valor
+                result.__setitem__((fila,columna),valor*k)
+                nodo_curr = nodo_curr.siguiente
         return result
-        pass
     
     def __rmul__( self, k ):
         # Esta funcion implementa el producto escalar-matriz -> k * A
@@ -139,19 +166,23 @@ class MatrizRala:
             raise ValueError("Las dimensiones de las matrices son diferentes y no se pueden sumar.")
 
         result = MatrizRala(*self.shape)
-        for fila in range(self.shape[0]):
-            for columna in range(self.shape[1]):
-                result[(fila, columna)] = self[(fila, columna)] + other[(fila, columna)]
+        for m,fila in self.filas.items():
+            for n in range(self.shape[0]):
+                _A = self.__getitem__((m,n))
+                _B = other.__getitem__((m,n))
+                result.__setitem__((m,n),_A + _B)
+
+        for m, fila in other.filas.items():
+            if m not in self.filas:
+                result.filas[m] = fila
         return result
-        pass
     
     def __sub__( self, other ):
         # Esta funcion implementa la resta de matrices (pueden usar suma y producto) -> A - B
         if self.shape != other.shape:
             raise ValueError("Las dimensiones de las matrices son diferentes y no se pueden restar.")
         
-        return self + (-1 * other)
-        pass
+        return self .__add__(other.__mul__(-1))
     
     def __matmul__( self, other ):
         # Esta funcion implementa el producto matricial (notado en Python con el operador "@" ) -> A @ B
@@ -159,12 +190,15 @@ class MatrizRala:
             raise ValueError("Las dimensiones de las matrices no son compatibles para la multiplicación.")
         
         result = MatrizRala(self.shape[0], other.shape[1])
+
         for i in range(self.shape[0]):
             for j in range(other.shape[1]):
+                value = 0
                 for k in range(self.shape[1]):
-                    result[(i, j)] += self[(i, k)] * other[(k, j)]
+                    value = value + self.__getitem__((i,k)) * other.__getitem__((k,j))
+
+            result.__setitem__((i,j),value)
         return result
-        pass                
 
         
     def __repr__( self ):
@@ -190,65 +224,58 @@ def GaussJordan(A, B):
     """
     Función que resuelve un sistema de ecuaciones lineales Ax = B utilizando el algoritmo de Gauss-Jordan.
     """
-
-    if isinstance(A,MatrizRala):
-        A = A.data
-    if isinstance(B,MatrizRala):
-        B = B.data
-
-    extended_matrix = [A[i] + B[i] for i in range(len(A))]
-
     # Concatenar A y B horizontalmente para formar una única matriz extendida
-    # extended_matrix = np.hstack((A, B))
+    
+    m,n = A.shape
+    if B.shape[0] != m or B.shape[1] != 1:
+        raise ValueError ("Dimensiones no compatibles para un sistema")
+    
+    extended_matrix = MatrizRala(m,n+1)
+    for i in range(m):
+        for j in range (n):
+            extended_matrix[i,j] = A[i,j]
+        extended_matrix[i,n] = B[i,0]
 
-    # Iniciar el proceso de reducción de Gauss-Jordan
-    pivot_col = 0
-    #n_rows, n_cols = extended_matrix.shape
-    n_rows = len(extended_matrix)
-    n_cols = len(extended_matrix[0])
+    for i in range(m):
+        if extended_matrix[i,i] == 0:
+            intercambio = False
+            for k in range(i+1,m):
+                if extended_matrix[k,1] != 0:
+                    for j in range(n+1):
+                        extended_matrix[i,j], extended_matrix[k,j] = extended_matrix[k,j], extended_matrix[i,j]
+                    intercambio = True
+                    break
+                #if not intercambio:
+                 #  raise ValueError("no se puede dividir por cero")
+                
+        pivote = extended_matrix[i,i]
+        for j in range(n+1):
+            if pivote != 0:
+                extended_matrix[i,j] = extended_matrix[i,j]/pivote
 
-    for row in range(n_rows):
-        if pivot_col >= n_cols - 1:
-            #return extended_matrix[:, -1].reshape(-1, 1)  # Devolver la solución x
-            return [[int(val)] for val in [row[-1] for row in extended_matrix]]
+        for k in range(m):
+            if not k==i:
+                factor = extended_matrix[k,i]
+                for j in range (n+1):
+                    extended_matrix[k,j] = extended_matrix[k,j] - factor * extended_matrix[i,j]
 
-        row_pivot = row
-        while abs(extended_matrix[row_pivot][pivot_col]) < 1e-5:
-            row_pivot += 1
-            if row_pivot == n_rows:
-                row_pivot = row
-                pivot_col += 1
-                if n_cols - 1 == pivot_col:
-                    #return extended_matrix[:, -1].reshape(-1, 1)  # Devolver la solución x
-                    return [[int(val)] for val in [row[-1] for row in extended_matrix]]
-            else:
-                extended_matrix[[row_pivot, row]] = extended_matrix[[row, row_pivot]]
+    sol = MatrizRala(m,1)
+    for i in range(m):
+        sol[i,0] = extended_matrix[i,n]
+    return sol
 
-        pivot = extended_matrix[row][pivot_col]
-        extended_matrix[row] = [mrx / float(pivot) for mrx in extended_matrix[row]]
-
-        for other_row in range(n_rows):
-            if other_row != row:
-                below_pivot = extended_matrix[other_row][pivot_col]
-                extended_matrix[other_row] = [iv - below_pivot * rv for rv, iv in zip(extended_matrix[row], extended_matrix[other_row])]
-        pivot_col += 1
-
-    #return extended_matrix[:, -1].reshape(-1, 1)  # Devolver la solución x
-    return [[int(val)] for val in [row[-1] for row in extended_matrix]]
 
 # Ejemplo de uso
-A = np.array([[1, -5,],
-              [3, 7,]
+A = np.array([[1, 0,0,],
+              [0,1,0],
+              [0,0,1],
               ])
 
-B = np.array([[-2],
-              [-2],
+B = np.array([[1],
+              [2],[3],
               ])
 
 solution = GaussJordan(A, B)
 print("La solución del sistema es:")
 print(solution)
-
-
-
 

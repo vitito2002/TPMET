@@ -1,6 +1,8 @@
 # IMPORTANTE: Para importar estas clases en otro archivo (que se encuentre en la misma carpeta), escribir:
 # from matricesRalas import MatrizRala, GaussJordan 
+
 import numpy as np
+import pandas as pd
 
 class ListaEnlazada:
     def __init__( self ):
@@ -103,18 +105,28 @@ class MatrizRala:
         self.shape = (M, N)
 
     def __getitem__( self, Idx ):
-        # COMPLETAR:
         # Esta funcion implementa la indexacion ( Idx es una tupla (m,n) ) -> A[m,n]
+        fila, columna = Idx
+        if fila not in self.filas or columna not in self.filas[fila]:
+            return 0
+        else:
+            return self.filas[fila][columna]
         pass
     
     def __setitem__( self, Idx, v ):
-        # COMPLETAR:
         # Esta funcion implementa la asignacion durante indexacion ( Idx es una tupla (m,n) ) -> A[m,n] = v
+        fila, columna = Idx
+        if fila not in self.filas:
+            self.filas[fila] = {}
+        self.filas[fila][columna] = v
         pass
 
     def __mul__( self, k ):
-        # COMPLETAR:
         # Esta funcion implementa el producto matriz-escalar -> A * k
+        result = MatrizRala(*self.shape)
+        for fila in self.filas:
+            result.filas[fila] = {columna: self.filas[fila][columna] * k for columna in self.filas[fila]}
+        return result
         pass
     
     def __rmul__( self, k ):
@@ -122,18 +134,36 @@ class MatrizRala:
         return self * k
 
     def __add__( self, other ):
-        # COMPLETAR:
         # Esta funcion implementa la suma de matrices -> A + B
+        if self.shape != other.shape:
+            raise ValueError("Las dimensiones de las matrices son diferentes y no se pueden sumar.")
+
+        result = MatrizRala(*self.shape)
+        for fila in range(self.shape[0]):
+            for columna in range(self.shape[1]):
+                result[(fila, columna)] = self[(fila, columna)] + other[(fila, columna)]
+        return result
         pass
     
     def __sub__( self, other ):
-        # COMPLETAR:
         # Esta funcion implementa la resta de matrices (pueden usar suma y producto) -> A - B
+        if self.shape != other.shape:
+            raise ValueError("Las dimensiones de las matrices son diferentes y no se pueden restar.")
+        
+        return self + (-1 * other)
         pass
     
     def __matmul__( self, other ):
-        # COMPLETAR:
         # Esta funcion implementa el producto matricial (notado en Python con el operador "@" ) -> A @ B
+        if self.shape[1] != other.shape[0]:
+            raise ValueError("Las dimensiones de las matrices no son compatibles para la multiplicación.")
+        
+        result = MatrizRala(self.shape[0], other.shape[1])
+        for i in range(self.shape[0]):
+            for j in range(other.shape[1]):
+                for k in range(self.shape[1]):
+                    result[(i, j)] += self[(i, k)] * other[(k, j)]
+        return result
         pass                
 
         
@@ -151,7 +181,12 @@ class MatrizRala:
         return res
 
 
+
 def GaussJordan(A, B):
+
+    # Hallar solucion x para el sistema Ax = b
+    # Devolver error si el sistema no tiene solucion o tiene infinitas soluciones, con el mensaje apropiado
+
     """
     Función que resuelve un sistema de ecuaciones lineales Ax = B utilizando el algoritmo de Gauss-Jordan.
     """
@@ -188,13 +223,13 @@ def GaussJordan(A, B):
     return extended_matrix[:, -1].reshape(-1, 1)  # Devolver la solución x
 
 # Ejemplo de uso
-A = np.array([[2, -1,6],
-              [2, -1,6],
-              [2, -1,6]])
+A = np.array([[1, -5,],
+              [3, 7,]
+              ])
 
-B = np.array([[0],
-              [0],
-              [0]])
+B = np.array([[-2],
+              [-2],
+              ])
 
 solution = GaussJordan(A, B)
 print("La solución del sistema es:")

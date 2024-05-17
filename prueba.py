@@ -1,40 +1,188 @@
-def imprimir_matriz(matriz):
-    for fila in matriz:
-        print(' '.join(f'{num:>8.4f}' if isinstance(num, float) else f'{num:>8}' for num in fila))
-    print()
+# Para correr los tests:
+#   1- Instalar pytest: ("pip install pytest")
+#   2- Correr en la terminal "pytest tests.py"
 
-def gauss_jordan_con_respuestas(matriz):
-    num_filas = len(matriz)
-    num_columnas = len(matriz[0])
-    
-    for i in range(num_filas):
-        max_row = max(range(i, num_filas), key=lambda r: abs(matriz[r][i]))
-        matriz[i], matriz[max_row] = matriz[max_row], matriz[i]
+import pytest
+from matrices_ralas import MatrizRala, GaussJordan
+import numpy as np
 
-        pivot = matriz[i][i]
-        for j in range(i, num_columnas):
-            matriz[i][j] /= pivot
-        imprimir_matriz(matriz)
+class TestIndexacionMatrices:
+    def test_indexarCeros( self ):
+        A = MatrizRala(3,3)
         
-        for k in range(num_filas):
-            if k != i:
-                factor = matriz[k][i]
-                for j in range(i, num_columnas):
-                    matriz[k][j] -= factor * matriz[i][j]
-        imprimir_matriz(matriz)
+        assert np.allclose( np.zeros(9), [A[i,j] for i in range(3) for j in range(3)] )
 
-    respuestas = [fila[-1] for fila in matriz]
-    for idx, valor in enumerate(respuestas, start=1):
-        print(f'x{idx} = {valor:.4f}')
+    def test_asignarValor( self ):
+        A = MatrizRala(3,3)
+        A[0,0] = 1
 
-# Preguntar al usuario el número de variables/ecuaciones
-num_variables = int(input('¿Cuántas variables deseas resolver? '))
+        assert A[0,0] == 1
 
-# Construir la matriz basada en la entrada del usuario
-matriz = []
-print(f'Introduce los coeficientes y el término independiente para cada ecuación:')
-for i in range(num_variables+1):
-    fila = list(map(float, input(f'Ecuación {i+1}: ').split()))
-    matriz.append(fila)
+    def test_asignarDejaCeros(self):
+        A = MatrizRala(3,3)
+        A[0,0] = 1
 
-gauss_jordan_con_respuestas(matriz)
+        assert np.allclose( np.zeros(9), [A[i,j] if (i != j and i != 0) else 0 for i in range(3) for j in range(3)] )
+
+    def test_asignarEnMismaFila( self ):
+        A = MatrizRala(3,3)
+        A[0,1] = 2
+        A[0,0] = 1
+
+        assert A[0,1] == 2 and A[0,0] == 1
+
+    def test_reasignar( self ):
+        A = MatrizRala(3,3)
+        A[1,0] = 1
+        A[1,0] = 3
+
+        assert A[1,0] == 3
+
+class TestSumaMatrices:
+    def test_distintasDimensiones( self ):
+        A = MatrizRala(2,3)
+        B = MatrizRala(3,3)
+        with pytest.raises(Exception) as e_info:
+            C = A + B
+        
+    def test_sumaCorrectamente( self ):
+        A = MatrizRala(3,3)
+        B = MatrizRala(3,3)
+
+        A[0,0]=1
+        A[0,2]=3
+        A[2,2]=4
+
+        B[0,2]=3
+        B[1,1]=2
+
+        C = A+B
+        assert C[0,0] == 1 and C[0,2] == 6 and C[2,2] == 4 and C[1,1] == 2
+
+class TestProductoPorEscalar:
+    def test_escalaCorrectamente( self ):
+        A = MatrizRala(3,3)
+        A[0,0]=1
+        A[0,2]=3
+        A[2,2]=4
+
+        C = A * 13
+        assert C[0,0] == (1*13) and C[0,2] == (3*13) and C[2,2] == (4*13)
+
+class TestProductoMatricial:
+    def test_dimensionesEquivocadas(self):
+        A = MatrizRala(2,3)
+        B = MatrizRala(4,3)
+        with pytest.raises(Exception) as e_info:
+            C = A @ B
+
+    def test_productoAndaBien(self):
+        A = MatrizRala(2,3)
+        B = MatrizRala(3,3)
+
+        A[0,0]=1
+        A[0,2]=3
+        A[1,2]=4
+
+        B[2,0]=3
+        B[1,1]=2
+
+        C = A @ B
+
+        assert C.shape[0] == 2 and C.shape[1]==3 and C[0,0] == 9 and C[0,1] == 0 and C[0,2] == 0 and C[1,0] == 12 and C[1,1] == 0 and C[1,2] == 0
+
+    def test_productoPorIdentidad( self ):
+        A = MatrizRala(3,3)
+        Id = MatrizRala(3,3)
+
+        A[0,0]=1
+        A[0,2]=3
+        A[1,2]=4
+
+        Id[0,0] = 1
+        Id[1,1] = 1
+        Id[2,2] = 1
+
+        C1 = A @ Id
+        C2 = Id @ A
+        assert C1[0,0] == 1 and C1[0,2] == 3 and C1[1,2] == 4 and C2[0,0] == 1 and C2[0,2] == 3 and C2[1,2] == 4 and C1.shape == C2.shape and C1.shape == A.shape
+
+class TestGaussJordan:
+    def test_tamanos( self ):
+        A = MatrizRala(2,2)
+        b = MatrizRala(3,1)
+
+        with pytest.raises(Exception) as e_info:
+            GaussJordan(A,b)
+
+    def test_matrizSingularTiraError( self ):
+        A = MatrizRala(3,3)
+        b = MatrizRala(3,1)
+
+        b[0,0] = 1
+        b[1,0] = 2
+        b[2,0] = 3
+
+        with pytest.raises(Exception) as e_info:
+            GaussJordan(A,b)
+
+    def test_identidad( self ):
+        A = MatrizRala(3,3)
+        b = MatrizRala(3,1)
+
+        A[0,0] = 1
+        A[1,1] = 1
+        A[2,2] = 1
+
+        b[0,0] = 1
+        b[1,0] = 2
+        b[2,0] = 3
+
+        x = GaussJordan(A,b)
+
+        assert x[0,0] == 1 and x[1,0] == 2 and x[2,0] == 3
+
+    def test_triangularSup( self ):
+        A = MatrizRala(3,3)
+        b = MatrizRala(3,1)
+
+        A[0,0] = 1
+        A[1,1] = 1
+        A[2,2] = 1
+        A[0,1] = 1
+        A[0,2] = 1
+        A[1,2] = 1
+
+        b[0,0] = 1
+        b[1,0] = 2
+        b[2,0] = 3
+
+        x = GaussJordan(A,b)
+
+        assert np.isclose( x[0,0], -1 ) and np.isclose(x[1,0], -1) and np.isclose(x[2,0], 3)
+
+    def test_completa( self ):
+        A = MatrizRala(3,3)
+        b = MatrizRala(3,1)
+
+        A[0,0] = 1
+        A[1,0] = 2
+        A[2,0] = 3
+
+        A[2,1] = 5
+        A[0,2] = 12
+        A[2,2] = 2.34
+
+        b[0,0] = 1
+        b[1,0] = 1
+        b[2,0] = 1
+
+        x = GaussJordan(A,b)
+
+        assert np.isclose( x[0,0], 0.5 ) and np.isclose(x[1,0], -0.1195) and np.isclose(x[2,0], 0.041667)
+
+
+
+
+
+

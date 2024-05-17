@@ -112,7 +112,7 @@ class MatrizRala:
             nodo_curr = fila.raiz
             while nodo_curr:
                 columna, valor = nodo_curr.valor
-                if columna == valor:
+                if columna == n:
                     return valor
                 nodo_curr = nodo_curr.siguiente
         return 0
@@ -195,9 +195,9 @@ class MatrizRala:
             for j in range(other.shape[1]):
                 value = 0
                 for k in range(self.shape[1]):
-                    value = value + self.__getitem__((i,k)) * other.__getitem__((k,j))
+                    value = value + (self.__getitem__((i,k)) * other.__getitem__((k,j))) 
 
-            result.__setitem__((i,j),value)
+                result.__setitem__((i,j),value)
         return result
 
         
@@ -245,8 +245,8 @@ def GaussJordan(A, B):
                         extended_matrix[i,j], extended_matrix[k,j] = extended_matrix[k,j], extended_matrix[i,j]
                     intercambio = True
                     break
-                #if not intercambio:
-                 #  raise ValueError("no se puede dividir por cero")
+                if not intercambio:
+                    raise ValueError("no se puede dividir por cero")
                 
         pivote = extended_matrix[i,i]
         for j in range(n+1):

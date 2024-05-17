@@ -264,18 +264,3 @@ def GaussJordan(A, B):
         sol[i,0] = extended_matrix[i,n]
     return sol
 
-
-# Ejemplo de uso
-A = np.array([[1, 0,0,],
-              [0,1,0],
-              [0,0,1],
-              ])
-
-B = np.array([[1],
-              [2],[3],
-              ])
-
-solution = GaussJordan(A, B)
-print("La solución del sistema es:")
-print(solution)
-

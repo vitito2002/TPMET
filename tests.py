@@ -3,7 +3,7 @@
 #   2- Correr en la terminal "pytest tests.py"
 
 import pytest
-from matrices_ralas import MatrizRala, GaussJordan
+from matricesRalas import MatrizRala, GaussJordan
 import numpy as np
 
 class TestIndexacionMatrices:

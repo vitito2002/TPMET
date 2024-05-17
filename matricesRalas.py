@@ -190,15 +190,27 @@ def GaussJordan(A, B):
     """
     Función que resuelve un sistema de ecuaciones lineales Ax = B utilizando el algoritmo de Gauss-Jordan.
     """
+
+    if isinstance(A,MatrizRala):
+        A = A.data
+    if isinstance(B,MatrizRala):
+        B = B.data
+
+    extended_matrix = [A[i] + B[i] for i in range(len(A))]
+
     # Concatenar A y B horizontalmente para formar una única matriz extendida
-    extended_matrix = np.hstack((A.astype(float), B.astype(float)))
+    # extended_matrix = np.hstack((A, B))
 
     # Iniciar el proceso de reducción de Gauss-Jordan
     pivot_col = 0
-    n_rows, n_cols = extended_matrix.shape
+    #n_rows, n_cols = extended_matrix.shape
+    n_rows = len(extended_matrix)
+    n_cols = len(extended_matrix[0])
+
     for row in range(n_rows):
         if pivot_col >= n_cols - 1:
-            return extended_matrix[:, -1].reshape(-1, 1)  # Devolver la solución x
+            #return extended_matrix[:, -1].reshape(-1, 1)  # Devolver la solución x
+            return [[int(val)] for val in [row[-1] for row in extended_matrix]]
 
         row_pivot = row
         while abs(extended_matrix[row_pivot][pivot_col]) < 1e-5:
@@ -207,7 +219,8 @@ def GaussJordan(A, B):
                 row_pivot = row
                 pivot_col += 1
                 if n_cols - 1 == pivot_col:
-                    return extended_matrix[:, -1].reshape(-1, 1)  # Devolver la solución x
+                    #return extended_matrix[:, -1].reshape(-1, 1)  # Devolver la solución x
+                    return [[int(val)] for val in [row[-1] for row in extended_matrix]]
             else:
                 extended_matrix[[row_pivot, row]] = extended_matrix[[row, row_pivot]]
 
@@ -220,7 +233,8 @@ def GaussJordan(A, B):
                 extended_matrix[other_row] = [iv - below_pivot * rv for rv, iv in zip(extended_matrix[row], extended_matrix[other_row])]
         pivot_col += 1
 
-    return extended_matrix[:, -1].reshape(-1, 1)  # Devolver la solución x
+    #return extended_matrix[:, -1].reshape(-1, 1)  # Devolver la solución x
+    return [[int(val)] for val in [row[-1] for row in extended_matrix]]
 
 # Ejemplo de uso
 A = np.array([[1, -5,],

@@ -146,7 +146,7 @@ class MatrizRala:
             
 
     def __mul__( self, k ):
-        # Esta funcion implementa el producto matriz-escalar -> A * k
+        # Esta funcion  implementa el producto matriz-escalar -> A * k
         result = MatrizRala(*self.shape)
         for fila,lista in self.filas.items():
             nodo_curr = lista.raiz
@@ -196,8 +196,9 @@ class MatrizRala:
                 value = 0
                 for k in range(self.shape[1]):
                     value = value + (self.__getitem__((i,k)) * other.__getitem__((k,j))) 
-
-                result.__setitem__((i,j),value)
+                if value != 0:  # Solo almacenamos valores no cero
+                    result.__setitem__((i, j), value)
+                #result.__setitem__((i,j),value)
         return result
 
         

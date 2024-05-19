@@ -5,12 +5,12 @@ from matricesRalas import *
 import csv
 
 
-papers = pd.read_csv("papers/papers.csv", header=0)
-citas = pd.read_csv("papers/citas.csv", header=0)
+papers = pd.read_csv("papers/kaosnum.csv", header=0)
+citas = pd.read_csv("papers/K4os.csv", header=0)
 
 
 def leer_citas():
-    archivo_citas = "papers/citas.csv"
+    archivo_citas = "papers/K4os.csv"
     citas = []
     with open(archivo_citas, newline="", encoding="utf-8") as f:
         lector = csv.reader(f)
@@ -21,7 +21,7 @@ def leer_citas():
 
 
 def leer_papers():
-    archivo_papers = "papers/papers.csv"
+    archivo_papers = "papers/kaosnum.csv"
     # Lista para almacenar los datos de los papers
 
     papers = []
@@ -70,33 +70,35 @@ def matriz_de_unos(n, m):
     return matriz
 
 
-def P_it(d, N, W, D):
-    p_t = MatrizRala(N, 1)  # Initial equiprobable distribution
+def PageRank(d, N, W, D):
+    p_t0 = MatrizRala(N, 1)  # Initial equiprobable distribution
     for i in range(N):
-        p_t[i, 0] = 1 / N
+        p_t0[i, 0] = 1 / N
     tolerance = 0.00000001
-    errores = []
+    diferencia = []
     error = 1
 
-    mat_unos = matriz_de_unos(N, 1)
-    unoMenosDeSobreEne = ((1 - d) / N) * mat_unos
+    Unos = MatrizRala(N,1)
+    for i in range(N):
+        Unos[i,0] = 1
+    b = ((1 - d) / N) * Unos
     d_W = d * W
     d_WD = d_W @ D
 
     while error > tolerance:
-        # Multiplica la matriz W_D por el vector p_t y escala por d
+        # Multiplica la matriz W_D por el vector p_t0 y escala por d
 
-        p_t_plus_1 = d_WD @ p_t
-        p_t_plus_1 = unoMenosDeSobreEne + p_t_plus_1
+        p_t1 = d_WD @ p_t0
+        p_t1 = b + p_t1
         # Calcula el error máximo en esta iteración comparando el nuevo vector de PageRank con el anterior
 
-        error = max(abs(p_t_plus_1[i, 0] - p_t[i, 0]) for i in range(N))
-        errores.append(error)
+        error = MatrizRala.diffVectors(p_t1,p_t0)
+        diferencia.append(error)
 
         # Actualiza el vector de PageRank para la próxima iteración
 
-        p_t = p_t_plus_1
-    return p_t, errores
+        p_t0 = p_t1
+    return p_t0, diferencia
 
 def main():
     
@@ -110,7 +112,7 @@ def main():
     N = len(lista_papers)
     d = 0.85
 
-    page_ranks = P_it(d, N, W, D)
+    page_ranks = PageRank(d, N, W, D)
     
     # Create list of (PageRank score, index)
     lista = [(page_ranks[0][i, 0], i) for i in range(len(lista_papers))]

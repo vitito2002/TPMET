@@ -102,176 +102,136 @@ class MatrizRala:
 
     def __getitem__( self, Idx ):
         # Esta funcion implementa la indexacion ( Idx es una tupla (m,n) ) -> A[m,n]
-        # tupla m= filas y n = columnas
-        m,c = Idx
+        m, n = Idx
         if m in self.filas:
             fila = self.filas[m]
-            actual = fila.raiz
-            while actual is not None:
-                if actual.valor[0] == c:
-                    return actual.valor[1]
-                actual = actual.siguiente
+            nodo_curr = fila.raiz
+            while nodo_curr:
+                columna, valor = nodo_curr.valor
+                if columna == n:
+                    return valor
+                nodo_curr = nodo_curr.siguiente
         return 0
 
-    def __setitem__(self, Idx, v):
-        # Esta función implementa la asignación durante indexación (Idx es una tupla (m,n)) -> A[m,n] = v
-        m, c = Idx # m filas, c columnas
-    
-        if m in self.filas:
-            fila = self.filas[m]
-            actual = fila.raiz
-            anterior = None
-            while actual is not None:
-                if actual.valor[0] == c:
-                    # Si la columna ya existe en la fila, actualizamos el valor
-                    if v == 0:
-                    # Si el valor es cero, eliminamos el nodo
-                        if anterior is None:
-                            fila.raiz = actual.siguiente
-                        else:
-                            anterior.siguiente = actual.siguiente
-                    # Si la fila está vacía después de eliminar el nodo, eliminamos la fila
-                        if fila.raiz is None:
-                            del self.filas[m]    
-                    else:
-                        actual.valor = (c, v)
-                        return
-                elif actual.valor[0] > c and v != 0:
-                    # Si encontramos una columna mayor que la que buscamos, insertamos el nuevo valor antes
-                    nuevo_nodo = ListaEnlazada.Nodo((c, v), actual)
-                    if anterior is None:
-                        fila.raiz = nuevo_nodo
-                    else:
-                        anterior.siguiente = nuevo_nodo
-                        nuevo_nodo.siguiente = actual  # Actualizamos el puntero siguiente del nuevo nodo
-                    return
-                anterior = actual
-                actual = actual.siguiente
-            # Si la columna no existe en la fila, la insertamos al final de la fila
-            fila.insertarDespuesDeNodo((c, v), anterior)  # Pasamos el valor y el nodo anterior
+    def __setitem__( self, Idx, v ):
+        # Esta funcion implementa la asignacion durante indexacion ( Idx es una tupla (m,n) ) -> A[m,n] = v
+        m, n = Idx
+        if m not in self.filas:
+            fila_extra = ListaEnlazada()
+            fila_extra.insertarFrente((n,v))
+            self.filas[m] = fila_extra
         else:
-            # Si la fila no existe, creamos una nueva fila con el valor asignado
-            fila = ListaEnlazada()
-            fila.push((c, v))
-            self.filas[m] = fila
+            fila = self.filas[m]
+            nodo_curr = fila.raiz
+            nodo_previo = None
+            while nodo_curr:
+                columna = nodo_curr.valor[0]
+                if columna==n:
+                    nodo_curr.valor = (n,v)
+                    return
+                elif columna > n:
+                    if not nodo_previo:
+                        fila.insertarFrente((n,v))
+                    else:
+                        fila.insertarDespuesDeNodo((n,v),nodo_previo)
+                    return
+                nodo_previo = nodo_curr
+                nodo_curr = nodo_curr.siguiente
+            fila.push((n,v))
+
 
 
     def __mul__(self, k):
-        # Esta función implementa el producto matriz-escalar -> A * k
-        matriz_resultado = MatrizRala(self.shape[0], self.shape[1])
-        for i in (self.filas):
-                actual = self.filas[i].raiz
-                while actual is not None:
-                    valor = self[i,actual.valor[0]] * k
-                    if valor != 0:
-                        matriz_resultado[i,actual.valor[0]] = valor  # Asignar el valor multiplicado a la matriz resultante
-                    actual = actual.siguiente
-        return matriz_resultado
+        # Esta funcion  implementa el producto matriz-escalar -> A * k
+        result = MatrizRala(*self.shape)
+        for fila,lista in self.filas.items():
+            nodo_curr = lista.raiz
+            while nodo_curr:
+                columna, valor = nodo_curr.valor
+                result.__setitem__((fila,columna),valor*k)
+                nodo_curr = nodo_curr.siguiente
+        return result
 
     def __rmul__( self, k ):
         # Esta funcion implementa el producto escalar-matriz -> k * A
         return self * k
 
-    def __add__(self, other):
-        # Verifica que las matrices tengan la misma forma
+    def __add__( self, other ):
+        # Esta funcion implementa la suma de matrices -> A + B
         if self.shape != other.shape:
-            raise ValueError("Las matrices deben tener la misma forma para ser sumadas.")
+            raise ValueError("Las dimensiones de las matrices son diferentes y no se pueden sumar.")
 
-        # Crea una matriz resultante con los mismos tamaños que las matrices de entrada
-        result = MatrizRala(self.shape[0], self.shape[1])
+        result = MatrizRala(*self.shape)
+        # for m,fila in self.filas.items():
+        #     for n in range(self.shape[0]):
+        #         _A = self.__getitem__((m,n))
+        #         _B = other.__getitem__((m,n))
+        #         result.__setitem__((m,n),_A + _B)
+        # for m, fila in other.filas.items():
+        #     if m not in self.filas:
+        #         result.filas[m] = fila
+        # return result
 
-        # Itera sobre las filas
-        for i in self.filas:
-            # Verifica si la fila i está presente en other
-            if i in other.filas:
-                current_self = self.filas[i].raiz
-                current_other = other.filas[i].raiz
-                # Itera sobre los elementos de la fila i en self y other
-                while current_self is not None or current_other is not None:
-                    if current_self is None:
-                        # Si no hay más elementos en self, copia los elementos restantes de other
-                        result[i, current_other.valor[0]] = current_other.valor[1]
-                        current_other = current_other.siguiente
-                    elif current_other is None:
-                        # Si no hay más elementos en other, copia los elementos restantes de self
-                        result[i, current_self.valor[0]] = current_self.valor[1]
-                        current_self = current_self.siguiente
-                    elif current_self.valor[0] == current_other.valor[0]:
-                        # Si los elementos tienen la misma columna, suma los valores
-                        suma = current_self.valor[1] + current_other.valor[1]
-                        if suma != 0:
-                            result[i, current_self.valor[0]] = suma
-                        current_self = current_self.siguiente
-                        current_other = current_other.siguiente
-                    elif current_self.valor[0] < current_other.valor[0]:
-                        # Si el índice de columna de self es menor que el de other, copia el elemento de self
-                        result[i, current_self.valor[0]] = current_self.valor[1]
-                        current_self = current_self.siguiente
-                    else:
-                        # Si el índice de columna de other es menor que el de self, copia el elemento de other
-                        result[i, current_other.valor[0]] = current_other.valor[1]
-                        current_other = current_other.siguiente
-            else:
-                # Si la fila está presente en self pero no en other, copia los elementos de self
-                current_self = self.filas[i].raiz
-                while current_self is not None:
-                    result[i, current_self.valor[0]] = current_self.valor[1]
-                    current_self = current_self.siguiente
 
-        # Copia los elementos de other que no están presentes en self
-        for i in other.filas:
-            if i not in self.filas:
-                current_other = other.filas[i].raiz
-                while current_other is not None:
-                    result[i, current_other.valor[0]] = current_other.valor[1]
-                    current_other = current_other.siguiente
-
+        for i in range(self.shape[0]):
+             for j in range(self.shape[1]):
+                 suma = self[i,j] + other [i,j]
+                 if suma != 0:
+                     result[i,j] = suma
         return result
 
-    def __sub__(self, other):
-        # Verifica que las matrices tengan la misma forma
+
+        # for (i, j), value in self.data.items():
+        #     suma = value + other[i, j]
+        #     if suma != 0:
+        #         result[i, j] = suma
+        # # Iterar sobre los elementos no nulos de la segunda matriz
+        # for (i, j), value in other.data.items():
+        #     if (i, j) not in self.data:
+        #         if value != 0:
+        #             result[i, j] = value
+        # return 
+
+    def __sub__( self, other ):
+        # Esta funcion implementa la resta de matrices (pueden usar suma y producto) -> A - B
         if self.shape != other.shape:
-            raise ValueError("Las matrices deben tener la misma forma para ser restadas.")
-
-        # Crea una matriz resultante inicializada como una matriz rala de la misma forma que las matrices de entrada
-        result = MatrizRala(self.shape[0], self.shape[1])
-
-        result = self + (-1 * other)
-
-        return result
+            raise ValueError("Las dimensiones de las matrices son diferentes y no se pueden restar.")
+        
+        return self .__add__(other.__mul__(-1))
 
 
     def __matmul__( self, other ):
         # Esta funcion implementa el producto matricial (notado en Python con el operador "@" ) -> A @ B
         if self.shape[1] != other.shape[0]:
-            raise Exception
+            raise ValueError("Las dimensiones de las matrices no son compatibles para la multiplicación.")
+        
+        result = MatrizRala(self.shape[0], other.shape[1])
+        
+        contador = 0
+        filas = len(self.filas)
 
-        if self.shape[1] != other.shape[0]:
-            raise Exception
-
-        # Se crea una nueva matriz rala 'res' con el número de filas de la primera matriz (self)
-        # y el número de columnas de la segunda matriz (other).
-        res = MatrizRala(self.shape[0], other.shape[1])
-
-        # Iterar solo sobre los elementos no nulos en la primera matriz (self).
         for i in self.filas:
-            # Se verifica si la fila 'i' está presente en self.
-            if i in self.filas:
-                current_row = self.filas[i].raiz  # Puntero al inicio de la fila 'i' en self.
-                while current_row is not None:
-                    k = current_row.valor[0]  # Índice de columna en self que corresponde al índice de fila en other.
-                    # Si la fila 'k' está presente en other.
-                    if k in other.filas:
-                        current_col = other.filas[k].raiz  # Puntero al inicio de la fila 'k' en other.
-                        while current_col is not None:
-                            j = current_col.valor[0]  # Índice de columna en other.
-                            # Multiplicar y añadir al elemento correspondiente en res.
-                            res[i, j] += self[i, k] * other[k, j]
-                            current_col = current_col.siguiente  # Avanzar al siguiente nodo en la fila 'k' de other.
-                    current_row = current_row.siguiente  # Avanzar al siguiente nodo en la fila 'i' de self.
-
-        # Devolver la matriz resultante 'res' que contiene el producto matricial de self y other.
-        return res
+            contador = contador + 1
+            fila = self.filas[i]
+            if fila.raiz:
+                nodo_raiz = fila.raiz
+                for j in range (other.shape[1]):
+                    nodo_curr = nodo_raiz
+                    total = 0
+                    while nodo_curr:
+                        j_curr = nodo_curr.valor[0]
+                        total = total + nodo_curr.valor[1] * other[j_curr,j]
+                        nodo_curr = nodo_curr.siguiente
+                    result[i,j] = total
+        # for i in range(self.shape[0]):
+        #     for j in range(other.shape[1]):
+        #         value = 0
+        #         for k in range(self.shape[1]):
+        #             value = value + (self.__getitem__((i,k)) * other.__getitem__((k,j))) 
+        #         if value != 0:  # Solo almacenamos valores no cero
+        #             result.__setitem__((i, j), value)
+        #         #result.__setitem__((i,j),value)
+        return result
 
 
     def __repr__( self ):
@@ -286,84 +246,72 @@ class MatrizRala:
         res += '])'
 
         return res
+    
+    def diffVectors(self,other):
+        # Verificar que los vectores tengan la misma longitud
+        if self.shape[0] != other.shape[0]:
+            raise ValueError("Los vectores deben tener la misma longitud.")
+        valorA = 0
+        valorB = 0
+        acumulado = 0
+        for i in range(self.shape[0]):
+            if(i in self.filas):
+                filaA = self.filas[i]
+                valorA = filaA.raiz.valor[1]
+            
+            if(i in other.filas):
+                filaB = other.filas[i]
+                valorB = filaB.raiz.valor[1]
+            acumulado += abs(valorA - valorB)
+            valorA = 0
+            valorB = 0
+        
+        return acumulado
 
-def GaussJordan(A, b):
-    if A.shape[0] != b.shape[0]:
-        raise ValueError("Los tamaños de b y A no son compatibles")
+def GaussJordan(A, B):
 
-    # Crear la matriz aumentada
-    M = MatrizRala(A.shape[0], A.shape[1] + 1)
-    for i in A.filas:
-        actual = A.filas[i].raiz
-        while actual is not None:
-            M[i, actual.valor[0]] = actual.valor[1]
-            actual = actual.siguiente
+    # Hallar solucion x para el sistema Ax = b
+    # Devolver error si el sistema no tiene solucion o tiene infinitas soluciones, con el mensaje apropiado
 
-    for i in b.filas:
-        M[i, A.shape[1]] = b[i, 0]
+    """
+    Función que resuelve un sistema de ecuaciones lineales Ax = B utilizando el algoritmo de Gauss-Jordan.
+    """
+    # Concatenar A y B horizontalmente para formar una única matriz extendida
+    
+    m,n = A.shape
+    if B.shape[0] != m or B.shape[1] != 1:
+        raise ValueError ("Dimensiones no compatibles para un sistema")
+    
+    extended_matrix = MatrizRala(m,n+1)
+    for i in range(m):
+        for j in range (n):
+            extended_matrix[i,j] = A[i,j]
+        extended_matrix[i,n] = B[i,0]
 
-    for i in range(A.shape[0]):
-        # Hacer pivote en M[i, i]
-        if M[i, i] == 0: # si mi pivote es 0
-            for k in range(i + 1, A.shape[0]): #intercambio filas hasta que pivote != 0
-                if M[k, i] != 0:
-                    for j in range(A.shape[1] + 1):
-                        M[i, j], M[k, j] = M[k, j], M[i, j]
+    for i in range(m):
+        if extended_matrix[i,i] == 0:
+            intercambio = False
+            for k in range(i+1,m):
+                if extended_matrix[k,1] != 0:
+                    for j in range(n+1):
+                        extended_matrix[i,j], extended_matrix[k,j] = extended_matrix[k,j], extended_matrix[i,j]
+                    intercambio = True
                     break
-            if M[i, i] == 0:
-                if M[i, A.shape[1]] == 0:
-                    raise ValueError("El sistema tiene infinitas soluciones.")
-                else:
-                    raise ValueError("El sistema no tiene solución.")
+                if not intercambio:
+                    raise ValueError("no se puede dividir por cero")
+                
+        pivote = extended_matrix[i,i]
+        for j in range(n+1):
+            if pivote != 0:
+                extended_matrix[i,j] = extended_matrix[i,j]/pivote
 
-        # Dividir fila i por M[i, i] para que el pivote sea 1
-        divisor = M[i, i]
-        actual = M.filas[i].raiz
-        while actual != None:
-            actual.valor = (actual.valor[0], actual.valor[1]/divisor)
-            actual = actual.siguiente
+        for k in range(m):
+            if not k==i:
+                factor = extended_matrix[k,i]
+                for j in range (n+1):
+                    extended_matrix[k,j] = extended_matrix[k,j] - factor * extended_matrix[i,j]
 
-        # Hacer ceros en la columna del pivote para todas las filas excepto la fila i
-        for k in M.filas:
-            if k != i:
-                factor = M[k,i]
-                for j in range(A.shape[1] + 1):     #no puedo iterar por filas porque a los 0s tambien se les debe restar
-                    M[k, j] -= factor * M[i, j]
-
-    # Comprobar si el sistema tiene solución
-    for i in M.filas:
-        actual = M.filas[i].raiz
-        suma = 0
-        while actual != None:
-            if actual.valor[0] != M.shape[0]:
-                suma = suma + actual.valor[1]
-            actual = actual.siguiente
-        if suma == 0 and M[i, A.shape[1]] != 0:
-            raise ValueError("El sistema no tiene solución.")
-
-    pivot_count = sum(1 for i in range(min(A.shape[0], A.shape[1])) if M[i, i] != 0) #debo recorrer por shape porque en todas las posiciones debe haber un pivote
-    if pivot_count < A.shape[1]:
-        raise ValueError("El sistema tiene infinitas soluciones debido a las variables libres.")
-
-    x = MatrizRala(A.shape[0], 1) #extraemos el vector solucion
-    for i in M.filas:
-        x[i,0] = M[i, A.shape[1]]
-    return x
-
-def suma_constante_matriz(matriz, constante):
-    # Suma de una constante a cada elemento
-    result = MatrizRala(matriz.shape)
-    for i in range(matriz.shape[0]):
-        for j in range(matriz.shape[1]):
-            result[i, j] = matriz[i, j] + constante
-    return result
-
-
-def multiplicar_matriz_vector(matriz, vector):
-    resultado = [0] * len(vector)
-    for i in range(len(vector)):
-        suma = 0
-        for j in range(len(vector)):
-            suma += matriz[i, j] * vector[j]
-        resultado[i] = suma
-    return resultado
+    sol = MatrizRala(m,1)
+    for i in range(m):
+        sol[i,0] = extended_matrix[i,n]
+    return sol

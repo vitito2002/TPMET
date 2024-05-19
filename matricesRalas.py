@@ -223,7 +223,7 @@ class MatrizRala:
         return res
     
     def multiplicacion_diagonal_rala(self, D):
-        # Multiplicación eficiente entre una matriz diagonal y una matriz rala
+        # Multiplicación eficiente entre una matriz diddagonal y una matriz rala
         if D.shape[1] != self.shape[0]:
             raise ValueError("Las dimensiones de las matrices no son compatibles para la multiplicación.")
 

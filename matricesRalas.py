@@ -278,51 +278,24 @@ class MatrizRala:
 
         return result
     
-    @staticmethod
-    def diffVectors(v1,v2):
-        """Agarra dos matricesRalas que son de 1 columna y compara su diferencia absoluta 
-        por cada posicion y suma todas las diferencias
-
-        Args:
-            A (MatrizRala): Matriz de nx1
-            B (MatrizRala): matriz de nx1
-
-        Raises:
-            ValueError: si las matrices no tienen la misma cantidad de filas
-
-        Returns:
-            int: Devuelve la sumatoria de las diferencias posicion a posicion
-        """
+    def diffVectors(self,other):
         # Verificar que los vectores tengan la misma longitud
-        if v1.shape[0] != v2.shape[0]:
+        if self.shape[0] != other.shape[0]:
             raise ValueError("Los vectores deben tener la misma longitud.")
-        
-        # Calcular la norma L1 de la diferencia entre los vectores
-        # dif = 0
-        # for i in v1.filas:
-        #     fila = v1.filas[i]
-        #     diferencia_absoluta = abs(v1[1,0]-v1[1,0])
-        #     dif += diferencia_absoluta
         valorA = 0
         valorB = 0
         acumulado = 0
-        for i in range(v1.shape[0]):
-            if(i in v1.filas):
-                filaA = v1.filas[i]
+        for i in range(self.shape[0]):
+            if(i in self.filas):
+                filaA = self.filas[i]
                 valorA = filaA.raiz.valor[1]
             
-            if(i in v2.filas):
-                filaB = v2.filas[i]
+            if(i in other.filas):
+                filaB = other.filas[i]
                 valorB = filaB.raiz.valor[1]
             acumulado += abs(valorA - valorB)
             valorA = 0
             valorB = 0
-
-            
-            
-        # for i in range(v1.shape[0]):
-        #     diferencia_absoluta = abs(v1[i,0] - v2[i,0])
-        #     dif += diferencia_absoluta
         
         return acumulado
 

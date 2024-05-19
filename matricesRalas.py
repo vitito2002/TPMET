@@ -177,11 +177,33 @@ class MatrizRala:
                 _A = self.__getitem__((m,n))
                 _B = other.__getitem__((m,n))
                 result.__setitem__((m,n),_A + _B)
-
         for m, fila in other.filas.items():
             if m not in self.filas:
                 result.filas[m] = fila
         return result
+
+
+        # for i in range(self.shape[0]):
+        #      for j in range(self.shape[1]):
+        #          suma = self[i,j] + other [i,j]
+        #          if suma != 0:
+        #              result[i,j] = suma
+        # return result
+
+
+        # for (i, j), value in self.data.items():
+        #     suma = value + other[i, j]
+        #     if suma != 0:
+        #         result[i, j] = suma
+        # # Iterar sobre los elementos no nulos de la segunda matriz
+        # for (i, j), value in other.data.items():
+        #     if (i, j) not in self.data:
+        #         if value != 0:
+        #             result[i, j] = value
+        # return 
+        
+
+
     
     def __sub__( self, other ):
         # Esta funcion implementa la resta de matrices (pueden usar suma y producto) -> A - B
@@ -196,15 +218,31 @@ class MatrizRala:
             raise ValueError("Las dimensiones de las matrices no son compatibles para la multiplicación.")
         
         result = MatrizRala(self.shape[0], other.shape[1])
+        
+        contador = 0
+        filas = len(self.filas)
 
-        for i in range(self.shape[0]):
-            for j in range(other.shape[1]):
-                value = 0
-                for k in range(self.shape[1]):
-                    value = value + (self.__getitem__((i,k)) * other.__getitem__((k,j))) 
-                if value != 0:  # Solo almacenamos valores no cero
-                    result.__setitem__((i, j), value)
-                #result.__setitem__((i,j),value)
+        for i in self.filas:
+            contador = contador + 1
+            fila = self.filas[i]
+            if fila.raiz:
+                nodo_raiz = fila.raiz
+                for j in range (other.shape[1]):
+                    nodo_curr = nodo_raiz
+                    total = 0
+                    while nodo_curr:
+                        j_curr = nodo_curr.valor[0]
+                        total = total + nodo_curr.valor[1] * other[j_curr,j]
+                        nodo_curr = nodo_curr.siguiente
+                    result[i,j] = total
+        # for i in range(self.shape[0]):
+        #     for j in range(other.shape[1]):
+        #         value = 0
+        #         for k in range(self.shape[1]):
+        #             value = value + (self.__getitem__((i,k)) * other.__getitem__((k,j))) 
+        #         if value != 0:  # Solo almacenamos valores no cero
+        #             result.__setitem__((i, j), value)
+        #         #result.__setitem__((i,j),value)
         return result
     
 
@@ -239,6 +277,54 @@ class MatrizRala:
                     nodo_curr = nodo_curr.siguiente
 
         return result
+    
+    @staticmethod
+    def diffVectors(v1,v2):
+        """Agarra dos matricesRalas que son de 1 columna y compara su diferencia absoluta 
+        por cada posicion y suma todas las diferencias
+
+        Args:
+            A (MatrizRala): Matriz de nx1
+            B (MatrizRala): matriz de nx1
+
+        Raises:
+            ValueError: si las matrices no tienen la misma cantidad de filas
+
+        Returns:
+            int: Devuelve la sumatoria de las diferencias posicion a posicion
+        """
+        # Verificar que los vectores tengan la misma longitud
+        if v1.shape[0] != v2.shape[0]:
+            raise ValueError("Los vectores deben tener la misma longitud.")
+        
+        # Calcular la norma L1 de la diferencia entre los vectores
+        # dif = 0
+        # for i in v1.filas:
+        #     fila = v1.filas[i]
+        #     diferencia_absoluta = abs(v1[1,0]-v1[1,0])
+        #     dif += diferencia_absoluta
+        valorA = 0
+        valorB = 0
+        acumulado = 0
+        for i in range(v1.shape[0]):
+            if(i in v1.filas):
+                filaA = v1.filas[i]
+                valorA = filaA.raiz.valor[1]
+            
+            if(i in v2.filas):
+                filaB = v2.filas[i]
+                valorB = filaB.raiz.valor[1]
+            acumulado += abs(valorA - valorB)
+            valorA = 0
+            valorB = 0
+
+            
+            
+        # for i in range(v1.shape[0]):
+        #     diferencia_absoluta = abs(v1[i,0] - v2[i,0])
+        #     dif += diferencia_absoluta
+        
+        return acumulado
 
 
 

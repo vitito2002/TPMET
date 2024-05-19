@@ -4,6 +4,12 @@
 import numpy as np
 import pandas as pd
 
+# Supongamos que D es una matriz diagonal representada como un vector
+class MatrizDiagonal:
+    def __init__(self, diagonal):
+        self.diagonal = diagonal
+        self.shape = (len(diagonal), len(diagonal))
+
 class ListaEnlazada:
     def __init__( self ):
         self.raiz = None
@@ -200,6 +206,7 @@ class MatrizRala:
                     result.__setitem__((i, j), value)
                 #result.__setitem__((i,j),value)
         return result
+    
 
         
     def __repr__( self ):
@@ -214,6 +221,24 @@ class MatrizRala:
         res += '])'
 
         return res
+    
+    def multiplicacion_diagonal_rala(self, D):
+        # Multiplicación eficiente entre una matriz diagonal y una matriz rala
+        if D.shape[1] != self.shape[0]:
+            raise ValueError("Las dimensiones de las matrices no son compatibles para la multiplicación.")
+
+        result = MatrizRala(D.shape[0], self.shape[1])
+
+        for i in range(self.shape[0]):
+            if i in self.filas:
+                fila = self.filas[i]
+                nodo_curr = fila.raiz
+                while nodo_curr:
+                    columna, valor = nodo_curr.valor
+                    result[(i, columna)] = D.diagonal[i] * valor
+                    nodo_curr = nodo_curr.siguiente
+
+        return result
 
 
 

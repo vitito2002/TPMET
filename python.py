@@ -74,7 +74,7 @@ def P_it(d, N, W, D):
     p_t = MatrizRala(N, 1)  # Initial equiprobable distribution
     for i in range(N):
         p_t[i, 0] = 1 / N
-    tolerance = 0.0001
+    tolerance = 0.00000001
     errores = []
     error = 1
 
@@ -119,7 +119,7 @@ def main():
     sorted_papers = sorted(lista, key=lambda x: x[0], reverse=True)
 
     # Print the top 10 papers with podium ranking
-    print("Top 10 Papers by PageRank:")
+    print("Top 10 Papers by PageRank con tolerancia de:0.00000001:")
     for rank, (score, index) in enumerate(sorted_papers[:10], start=1):
         print(f"{rank}. Paper ID: {lista_papers[index][0]}, Title: \"{lista_papers[index][1]}\", Score: {score:.6f}")
 

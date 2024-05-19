@@ -172,23 +172,23 @@ class MatrizRala:
             raise ValueError("Las dimensiones de las matrices son diferentes y no se pueden sumar.")
 
         result = MatrizRala(*self.shape)
-        for m,fila in self.filas.items():
-            for n in range(self.shape[0]):
-                _A = self.__getitem__((m,n))
-                _B = other.__getitem__((m,n))
-                result.__setitem__((m,n),_A + _B)
-        for m, fila in other.filas.items():
-            if m not in self.filas:
-                result.filas[m] = fila
-        return result
-
-
-        # for i in range(self.shape[0]):
-        #      for j in range(self.shape[1]):
-        #          suma = self[i,j] + other [i,j]
-        #          if suma != 0:
-        #              result[i,j] = suma
+        # for m,fila in self.filas.items():
+        #     for n in range(self.shape[0]):
+        #         _A = self.__getitem__((m,n))
+        #         _B = other.__getitem__((m,n))
+        #         result.__setitem__((m,n),_A + _B)
+        # for m, fila in other.filas.items():
+        #     if m not in self.filas:
+        #         result.filas[m] = fila
         # return result
+
+
+        for i in range(self.shape[0]):
+             for j in range(self.shape[1]):
+                 suma = self[i,j] + other [i,j]
+                 if suma != 0:
+                     result[i,j] = suma
+        return result
 
 
         # for (i, j), value in self.data.items():

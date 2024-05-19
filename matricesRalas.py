@@ -222,27 +222,31 @@ class MatrizRala:
         contador = 0
         filas = len(self.filas)
 
-        for i in self.filas:
-            contador = contador + 1
-            fila = self.filas[i]
-            if fila.raiz:
-                nodo_raiz = fila.raiz
-                for j in range (other.shape[1]):
-                    nodo_curr = nodo_raiz
-                    total = 0
-                    while nodo_curr:
-                        j_curr = nodo_curr.valor[0]
-                        total = total + nodo_curr.valor[1] * other[j_curr,j]
-                        nodo_curr = nodo_curr.siguiente
-                    result[i,j] = total
-        # for i in range(self.shape[0]):
-        #     for j in range(other.shape[1]):
-        #         value = 0
-        #         for k in range(self.shape[1]):
-        #             value = value + (self.__getitem__((i,k)) * other.__getitem__((k,j))) 
-        #         if value != 0:  # Solo almacenamos valores no cero
-        #             result.__setitem__((i, j), value)
-        #         #result.__setitem__((i,j),value)
+        # for i in self.filas:
+        #     contador = contador + 1
+        #     fila = self.filas[i]
+        #     if fila.raiz:
+        #         nodo_raiz = fila.raiz
+        #         for j in range (other.shape[1]):
+        #             nodo_curr = nodo_raiz
+        #             total = 0
+        #             while nodo_curr:
+        #                 j_curr = nodo_curr.valor[0]
+        #                 total = total + nodo_curr.valor[1] * other[j_curr,j]
+        #                 nodo_curr = nodo_curr.siguiente
+        #             result[i,j] = total
+
+
+        for i in range(self.shape[0]):
+            for j in range(other.shape[1]):
+                value = 0
+                for k in range(self.shape[1]):
+                    value = value + (self.__getitem__((i,k)) * other.__getitem__((k,j))) 
+                if value != 0:  # Solo almacenamos valores no cero
+                    result.__setitem__((i, j), value)
+                #result.__setitem__((i,j),value)
+
+
         return result
     
 

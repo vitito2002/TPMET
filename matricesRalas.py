@@ -162,6 +162,8 @@ class MatrizRala:
             raise ValueError("Las dimensiones de las matrices son diferentes y no se pueden sumar.")
 
         result = MatrizRala(*self.shape)
+        
+        
         # for m,fila in self.filas.items():
         #     for n in range(self.shape[0]):
         #         _A = self.__getitem__((m,n))
@@ -180,17 +182,6 @@ class MatrizRala:
                      result[i,j] = suma
         return result
 
-
-        # for (i, j), value in self.data.items():
-        #     suma = value + other[i, j]
-        #     if suma != 0:
-        #         result[i, j] = suma
-        # # Iterar sobre los elementos no nulos de la segunda matriz
-        # for (i, j), value in other.data.items():
-        #     if (i, j) not in self.data:
-        #         if value != 0:
-        #             result[i, j] = value
-        # return 
 
     def __sub__( self, other ):
         # Esta funcion implementa la resta de matrices (pueden usar suma y producto) -> A - B

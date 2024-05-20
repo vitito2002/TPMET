@@ -1,6 +1,3 @@
-# IMPORTANTE: Para importar estas clases en otro archivo (que se encuentre en la misma carpeta), escribir:
-# from matricesRalas import MatrizRala, GaussJordan
-
 class ListaEnlazada:
     def __init__( self ):
         self.raiz = None

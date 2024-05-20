@@ -6,7 +6,7 @@ import csv
 
 
 def leer_citas():
-    archivo_citas = "papers/K4os.csv"
+    archivo_citas = "papers/citas.csv"
     citas = []
     with open(archivo_citas, newline="", encoding="utf-8") as f:
         lector = csv.reader(f)
@@ -17,7 +17,7 @@ def leer_citas():
 
 
 def leer_papers():
-    archivo_papers = "papers/kaosnum.csv"
+    archivo_papers = "papers/papers.csv"
     papers = []
     with open(archivo_papers, mode="r", encoding="utf-8") as f:
         lector = csv.DictReader(f)
